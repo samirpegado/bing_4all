@@ -1,0 +1,35 @@
+name: bing_4all
+description: "Cliente desktop Linux para wallpapers diários do Bing (não oficial)."
+publish_to: 'none'
+version: 0.1.0+1
+homepage: https://github.com/samirpegado/bing_4all
+repository: https://github.com/samirpegado/bing_4all
+issue_tracker: https://github.com/samirpegado/bing_4all/issues
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  crypto: ^3.0.7
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.6.1
+  flutter_svg: ^2.3.0
+  http: ^1.6.0
+  intl: ^0.20.3
+  path: ^1.9.1
+  path_provider: ^2.1.6
+  url_launcher: ^6.3.2
+  window_manager: ^0.5.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/bing-seeklogo.svg
+    - assets/bing-seeklogo.png
+    - assets/app_icon.png
+    - assets/tray_icon.png

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "environment": {
+    "example_file": "not-required"
+  },
+  "flutter": {
+    "state_management": "riverpod"
+  },
+  "product": {
+    "name": "bing_4all",
+    "license_preferred": "GPL-3.0-or-later",
+    "platforms_mvp": ["linux-gnome", "linux-kde"],
+    "platforms_v2": ["macos"]
+  }
+}

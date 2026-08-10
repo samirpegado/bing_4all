@@ -1,0 +1,91 @@
+# --- OS ---
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+Desktop.ini
+*~
+
+# --- Editors / IDEs ---
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+*.swp
+*.swo
+.atom/
+.history/
+.sublime-project
+.sublime-workspace
+
+# --- Flutter / Dart ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+app.*.symbols
+app.*.map.json
+*.g.dart
+*.freezed.dart
+
+# --- Packaging / release artifacts ---
+/dist/
+*.deb
+*.rpm
+*.pkg.tar.zst
+*.AppImage
+*.snap
+
+# --- Native / CMake (ephemeral is regenerated) ---
+linux/flutter/ephemeral/
+macos/Flutter/ephemeral/
+**/CMakeCache.txt
+**/CMakeFiles/
+**/cmake_install.cmake
+**/Makefile
+**/.ninja_deps
+**/.ninja_log
+**/build.ninja
+
+# --- Local tooling / scratch ---
+.tools/
+.playwright-mcp/
+*.log
+*.tmp
+*.temp
+.cache/
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+service-account*.json
+
+# --- Screenshots / local media (keep assets/ versioned) ---
+/ss*.png
+/screenshots/local/
+
+# --- Misc ---
+*.class
+*.pyc
+__pycache__/
+.svn/
+.swiftpm/
+migrate_working_dir/
+.python-version
+.direnv/
+.playwright-mcp/**
+.tools/**
