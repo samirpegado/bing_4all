@@ -54,18 +54,34 @@ static void my_application_activate(GApplication* application) {
 
   gtk_window_set_default_size(window, 1280, 720);
 
-  // Prefer the bundled app icon (installed next to data/) when available.
+  // Prefer the bundled / themed app icon (window + default for the process).
   {
     g_autofree gchar* exe_path = g_file_read_link("/proc/self/exe", nullptr);
-    if (exe_path != nullptr) {
-      g_autofree gchar* exe_dir = g_path_get_dirname(exe_path);
-      g_autofree gchar* icon_path =
-          g_build_filename(exe_dir, "data", "app_icon.png", nullptr);
-      if (g_file_test(icon_path, G_FILE_TEST_EXISTS)) {
-        gtk_window_set_icon_from_file(window, icon_path, nullptr);
-        gtk_window_set_default_icon_from_file(icon_path, nullptr);
+    g_autofree gchar* exe_dir =
+        exe_path != nullptr ? g_path_get_dirname(exe_path) : nullptr;
+    g_autofree gchar* icon_bundle =
+        exe_dir != nullptr
+            ? g_build_filename(exe_dir, "data", "app_icon.png", nullptr)
+            : nullptr;
+    g_autofree gchar* icon_asset =
+        exe_dir != nullptr ? g_build_filename(exe_dir, "data", "flutter_assets",
+                                              "assets", "app_icon.png", nullptr)
+                           : nullptr;
+    const gchar* candidates[] = {
+        icon_bundle,
+        icon_asset,
+        "/usr/share/icons/hicolor/128x128/apps/bing-4all.png",
+        "/usr/share/icons/hicolor/48x48/apps/bing-4all.png",
+        nullptr,
+    };
+    for (int i = 0; candidates[i] != nullptr; i++) {
+      if (g_file_test(candidates[i], G_FILE_TEST_EXISTS)) {
+        gtk_window_set_icon_from_file(window, candidates[i], nullptr);
+        gtk_window_set_default_icon_from_file(candidates[i], nullptr);
+        break;
       }
     }
+    gtk_window_set_default_icon_name("bing-4all");
   }
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();

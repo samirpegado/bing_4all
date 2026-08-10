@@ -20,7 +20,9 @@ APP_NAME="Bing 4All"
 PKG_NAME="bing-4all"
 BIN_NAME="bing_4all"
 DESKTOP_ID="bing-4all"
+WM_CLASS="com.samirpegado.bing_4all"
 INSTALL_DIR="/usr/share/${PKG_NAME}"
+ICON_NAME="bing-4all"
 MAINTAINER="${MAINTAINER:-Samir <samir@localhost>}"
 HOMEPAGE="${HOMEPAGE:-https://github.com/samirpegado/bing_4all}"
 
@@ -79,6 +81,7 @@ build_flutter() {
 write_desktop_file() {
   local dest="$1"
   local exec_line="$2"
+  local icon_value="${3:-$ICON_NAME}"
   cat > "$dest" <<EOF
 [Desktop Entry]
 Type=Application
@@ -87,12 +90,43 @@ Name=$APP_NAME
 GenericName=Bing wallpapers
 Comment=Wallpapers diários do Bing (não oficial)
 Exec=$exec_line
-Icon=$DESKTOP_ID
+Icon=$icon_value
 Terminal=false
 Categories=Utility;DesktopUtility;
 StartupNotify=true
-StartupWMClass=$BIN_NAME
+StartupWMClass=$WM_CLASS
 EOF
+}
+
+install_hicolor_icons() {
+  local root="$1"
+  local sizes=(16 24 32 48 64 128 256 512)
+  local src_master="$ROOT/assets/app_icon.png"
+
+  for size in "${sizes[@]}"; do
+    local dest_dir="$root/usr/share/icons/hicolor/${size}x${size}/apps"
+    mkdir -p "$dest_dir"
+    local packaged="$ROOT/linux/icons/hicolor/${size}x${size}/apps/bing_4all.png"
+    if [[ -f "$packaged" ]]; then
+      cp "$packaged" "$dest_dir/${ICON_NAME}.png"
+    elif [[ -f "$src_master" ]] && command -v python3 >/dev/null 2>&1; then
+      python3 - "$src_master" "$dest_dir/${ICON_NAME}.png" "$size" <<'PY'
+import sys
+from PIL import Image
+src, dest, size = sys.argv[1], sys.argv[2], int(sys.argv[3])
+im = Image.open(src).convert("RGBA")
+canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+max_side = int(size * 0.9)
+ratio = min(max_side / im.width, max_side / im.height)
+w, h = max(1, int(im.width * ratio)), max(1, int(im.height * ratio))
+logo = im.resize((w, h), Image.Resampling.LANCZOS)
+canvas.paste(logo, ((size - w) // 2, (size - h) // 2), logo)
+canvas.save(dest, "PNG")
+PY
+    elif [[ -f "$src_master" ]]; then
+      cp "$src_master" "$dest_dir/${ICON_NAME}.png"
+    fi
+  done
 }
 
 populate_filesystem_tree() {
@@ -102,10 +136,15 @@ populate_filesystem_tree() {
     "$root$INSTALL_DIR" \
     "$root/usr/bin" \
     "$root/usr/share/applications" \
-    "$root/usr/share/icons/hicolor/512x512/apps" \
     "$root/usr/share/doc/$PKG_NAME"
 
   cp -a "$BUNDLE/." "$root$INSTALL_DIR/"
+
+  # Ensure data/app_icon.png exists next to the binary for native GTK icon load.
+  if [[ -f "$ROOT/assets/app_icon.png" ]]; then
+    mkdir -p "$root$INSTALL_DIR/data"
+    cp "$ROOT/assets/app_icon.png" "$root$INSTALL_DIR/data/app_icon.png"
+  fi
 
   cat > "$root/usr/bin/$DESKTOP_ID" <<EOF
 #!/bin/sh
@@ -113,14 +152,13 @@ exec "$INSTALL_DIR/$BIN_NAME" "\$@"
 EOF
   chmod 755 "$root/usr/bin/$DESKTOP_ID"
 
-  if [[ -f "$ROOT/assets/app_icon.png" ]]; then
-    cp "$ROOT/assets/app_icon.png" \
-      "$root/usr/share/icons/hicolor/512x512/apps/${DESKTOP_ID}.png"
-  fi
+  install_hicolor_icons "$root"
 
+  # Absolute icon path is more reliable on Cinnamon + icon themes like Papirus.
   write_desktop_file \
     "$root/usr/share/applications/${DESKTOP_ID}.desktop" \
-    "$DESKTOP_ID"
+    "$DESKTOP_ID" \
+    "/usr/share/icons/hicolor/128x128/apps/${ICON_NAME}.png"
 
   cat > "$root/usr/share/doc/$PKG_NAME/copyright" <<EOF
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
@@ -139,9 +177,11 @@ build_tarball() {
   rm -rf "$TARBALL_DIR"
   mkdir -p "$TARBALL_DIR"
   cp -a "$BUNDLE/." "$TARBALL_DIR/"
-  write_desktop_file "$TARBALL_DIR/${DESKTOP_ID}.desktop" "$BIN_NAME"
+  write_desktop_file "$TARBALL_DIR/${DESKTOP_ID}.desktop" "$BIN_NAME" "$ICON_NAME"
   if [[ -f "$ROOT/assets/app_icon.png" ]]; then
     cp "$ROOT/assets/app_icon.png" "$TARBALL_DIR/${DESKTOP_ID}.png"
+    mkdir -p "$TARBALL_DIR/data"
+    cp "$ROOT/assets/app_icon.png" "$TARBALL_DIR/data/app_icon.png"
   fi
   cat > "$TARBALL_DIR/install.sh" <<'EOF'
 #!/bin/sh
@@ -149,18 +189,20 @@ build_tarball() {
 set -eu
 PREFIX="${PREFIX:-$HOME/.local}"
 APP_ID="bing-4all"
+WM_CLASS="com.samirpegado.bing_4all"
 SRC="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 DEST="$PREFIX/share/$APP_ID"
 BIN="$PREFIX/bin/$APP_ID"
 
 mkdir -p "$DEST" "$PREFIX/bin" \
   "$PREFIX/share/applications" \
+  "$PREFIX/share/icons/hicolor/48x48/apps" \
+  "$PREFIX/share/icons/hicolor/128x128/apps" \
   "$PREFIX/share/icons/hicolor/512x512/apps"
 
 rm -rf "$DEST"
 mkdir -p "$DEST"
 cp -a "$SRC"/. "$DEST/"
-# remove helpers from install tree copies if present
 rm -f "$DEST/install.sh"
 
 cat > "$BIN" <<WRAP
@@ -169,13 +211,30 @@ exec "$DEST/bing_4all" "\$@"
 WRAP
 chmod 755 "$BIN"
 
-if [ -f "$DEST/${APP_ID}.desktop" ]; then
-  sed "s|^Exec=.*|Exec=$APP_ID|" "$DEST/${APP_ID}.desktop" \
-    > "$PREFIX/share/applications/${APP_ID}.desktop"
-fi
+ICON_PATH="$PREFIX/share/icons/hicolor/128x128/apps/${APP_ID}.png"
 if [ -f "$DEST/${APP_ID}.png" ]; then
-  cp "$DEST/${APP_ID}.png" \
-    "$PREFIX/share/icons/hicolor/512x512/apps/${APP_ID}.png"
+  cp "$DEST/${APP_ID}.png" "$PREFIX/share/icons/hicolor/48x48/apps/${APP_ID}.png"
+  cp "$DEST/${APP_ID}.png" "$PREFIX/share/icons/hicolor/128x128/apps/${APP_ID}.png"
+  cp "$DEST/${APP_ID}.png" "$PREFIX/share/icons/hicolor/512x512/apps/${APP_ID}.png"
+fi
+
+cat > "$PREFIX/share/applications/${APP_ID}.desktop" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Bing 4All
+GenericName=Bing wallpapers
+Comment=Wallpapers diários do Bing (não oficial)
+Exec=$APP_ID
+Icon=$ICON_PATH
+Terminal=false
+Categories=Utility;DesktopUtility;
+StartupNotify=true
+StartupWMClass=$WM_CLASS
+DESKTOP
+
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+  gtk-update-icon-cache -f -t "$PREFIX/share/icons/hicolor" >/dev/null 2>&1 || true
 fi
 
 echo "Instalado: $BIN"
@@ -212,11 +271,25 @@ Description: $APP_NAME
 Homepage: $HOMEPAGE
 EOF
 
+  cat > "$stage/DEBIAN/postinst" <<'EOF'
+#!/bin/sh
+set -e
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+  gtk-update-icon-cache -f -t /usr/share/icons/hicolor >/dev/null 2>&1 || true
+fi
+if command -v update-desktop-database >/dev/null 2>&1; then
+  update-desktop-database -q /usr/share/applications >/dev/null 2>&1 || true
+fi
+exit 0
+EOF
+  chmod 755 "$stage/DEBIAN/postinst"
+
   find "$stage" -type d -exec chmod 755 {} +
   find "$stage$INSTALL_DIR" -type f -exec chmod 644 {} +
   chmod 755 "$stage$INSTALL_DIR/$BIN_NAME" "$stage/usr/bin/$DESKTOP_ID"
   find "$stage$INSTALL_DIR/lib" -type f -name '*.so*' -exec chmod 755 {} + 2>/dev/null || true
   chmod 644 "$stage/DEBIAN/control"
+  find "$stage/usr/share/icons" -type f -name '*.png' -exec chmod 644 {} + 2>/dev/null || true
 
   dpkg-deb --root-owner-group --build "$stage" "$OUT_DEB"
   echo "    $OUT_DEB"
@@ -257,7 +330,7 @@ cp -a $STAGE_FS/. %{buildroot}/
 $INSTALL_DIR
 /usr/bin/$DESKTOP_ID
 /usr/share/applications/${DESKTOP_ID}.desktop
-/usr/share/icons/hicolor/512x512/apps/${DESKTOP_ID}.png
+/usr/share/icons/hicolor
 /usr/share/doc/$PKG_NAME
 
 %changelog
