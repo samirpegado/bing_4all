@@ -15,10 +15,9 @@ enum LinuxDesktopEnvironment {
 class LinuxWallpaperPlatform implements WallpaperPlatform {
   LinuxWallpaperPlatform({
     Future<ProcessResult> Function(String, List<String>)? run,
-    LinuxDesktopEnvironment? desktopOverride,
+    this._desktopOverride,
     Map<String, String>? environment,
   })  : _run = run ?? Process.run,
-        _desktopOverride = desktopOverride,
         _environment = environment ?? Platform.environment;
 
   final Future<ProcessResult> Function(String executable, List<String> arguments)

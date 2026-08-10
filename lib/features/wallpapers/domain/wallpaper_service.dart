@@ -13,16 +13,12 @@ import 'wallpaper.dart';
 
 class WallpaperService {
   WallpaperService({
-    required WallpaperRepository repository,
-    required WallpaperPlatform wallpaperPlatform,
-    required StartupPlatform startupPlatform,
-    required AppStateStore stateStore,
-    required AppLogger logger,
-  })  : _repository = repository,
-        _wallpaperPlatform = wallpaperPlatform,
-        _startupPlatform = startupPlatform,
-        _stateStore = stateStore,
-        _logger = logger;
+    required this._repository,
+    required this._wallpaperPlatform,
+    required this._startupPlatform,
+    required this._stateStore,
+    required this._logger,
+  });
 
   final WallpaperRepository _repository;
   final WallpaperPlatform _wallpaperPlatform;

@@ -183,7 +183,7 @@ class _WallpaperPanelState extends ConsumerState<WallpaperPanel> {
                         style: Theme.of(context).textTheme.labelMedium,
                       ),
                       loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -196,7 +196,7 @@ class _WallpaperPanelState extends ConsumerState<WallpaperPanel> {
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: items.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
                         itemBuilder: (context, index) {
                           final item = items[index];
                           final selectedNow = index == selectedIndex;
@@ -266,7 +266,7 @@ class _Preview extends StatelessWidget {
             : Image.network(
                 wallpaper.imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (_, _, _) => Container(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   alignment: Alignment.center,
                   child: const Icon(Icons.image_not_supported_outlined),
@@ -317,7 +317,7 @@ class _GalleryThumb extends StatelessWidget {
               Image.network(
                 wallpaper.imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const ColoredBox(
+                errorBuilder: (_, _, _) => const ColoredBox(
                   color: Colors.black12,
                 ),
               ),

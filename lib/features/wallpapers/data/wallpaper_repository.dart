@@ -10,16 +10,12 @@ import 'wallpaper_cache.dart';
 
 class WallpaperRepository {
   WallpaperRepository({
-    required SafeHttpClient http,
-    required BingPrimaryApi primaryApi,
-    required BingFallbackApi fallbackApi,
-    required WallpaperCache cache,
-    required AppLogger logger,
-  })  : _http = http,
-        _primaryApi = primaryApi,
-        _fallbackApi = fallbackApi,
-        _cache = cache,
-        _logger = logger;
+    required this._http,
+    required this._primaryApi,
+    required this._fallbackApi,
+    required this._cache,
+    required this._logger,
+  });
 
   final SafeHttpClient _http;
   final BingPrimaryApi _primaryApi;
