@@ -134,12 +134,22 @@ jobs:
             assets+=(dist/*.rpm)
           fi
 
+          prerelease_args=()
+          latest_args=(--latest)
+          if [[ "$VERSION" == *-* ]]; then
+            # ex.: 1.0.0-beta.1, 1.0.0-rc.1 → pré-release (não vira "Latest")
+            prerelease_args=(--prerelease)
+            latest_args=()
+          fi
+
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "${assets[@]}" --clobber
-            gh release edit "$TAG" --notes-file "$notes" --latest
+            gh release edit "$TAG" --notes-file "$notes" \
+              "${prerelease_args[@]}" "${latest_args[@]}"
           else
             gh release create "$TAG" "${assets[@]}" \
               --title "Bing 4All ${VERSION}" \
               --notes-file "$notes" \
-              --latest
+              "${prerelease_args[@]}" "${latest_args[@]}"
           fi
+
