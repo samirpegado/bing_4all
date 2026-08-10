@@ -1,7 +1,7 @@
 name: bing_4all
 description: "Cliente desktop Linux para wallpapers diários do Bing (não oficial)."
 publish_to: 'none'
-version: 0.1.0+1
+version: 1.0.0+1
 homepage: https://github.com/samirpegado/bing_4all
 repository: https://github.com/samirpegado/bing_4all
 issue_tracker: https://github.com/samirpegado/bing_4all/issues
